@@ -12,7 +12,6 @@ import cv2
 import os
 import classifier
 
-
 st.write("""
 # CCD Car Color Detection
 
@@ -34,8 +33,6 @@ ap.add_argument("-y", "--yolo", default='yolov4', help="base path to YOLO direct
 args = vars(ap.parse_args())
 
 if uf is not None:
-	#image = Image.open(img_file_buffer)
-	#img_array = np.array(image) # if you want to pass it to OpenCV
 	st.image(uf, caption="Uploaded Image", use_column_width=True)
 	with open(uf.name, 'wb') as f:
 		f.write(uf.read())
@@ -56,8 +53,6 @@ weightsPath = os.path.sep.join([args["yolo"], "yolov4.weights"])
 configPath = os.path.sep.join([args["yolo"], "yolov4.cfg"])
 
 # load our YOLO object detector trained on COCO dataset (80 classes)
-print("[INFO] loading YOLO from disk...")
-
 net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
 # load our input image and grab its spatial dimensions
@@ -80,7 +75,6 @@ if uf is not None:
 	end = time.time()
 
 	# show timing information on YOLO
-	print("[INFO] YOLO took {:.6f} seconds".format(end - start))
 	st.write("Time took {:.6f} seconds".format(end - start))
 
 	# initialize our lists of detected bounding boxes, confidences, and
