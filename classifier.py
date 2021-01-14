@@ -2,12 +2,9 @@
 # Licensed under the MIT License
 
 import numpy as np
-import json
-#import tensorflow as tf
 import tensorflow.compat.v1 as tf   # TensorFlow 2.0
-from PIL import Image, ImageOps
 import cv2
-import io
+import os
 import config
 
 model_file = config.model_file
@@ -17,30 +14,28 @@ output_layer = config.output_layer
 classifier_input_size = config.classifier_input_size
 
 def load_graph(model_file):
-  graph = tf.Graph()
-  graph_def = tf.GraphDef()
+    graph = tf.Graph()
+    graph_def = tf.GraphDef()
 
-  with open(model_file, "rb") as f:
-    graph_def.ParseFromString(f.read())
-  with graph.as_default():
-    tf.import_graph_def(graph_def)
-
-  return graph
+    with open(model_file, "rb") as f:
+        graph_def.ParseFromString(f.read())
+    with graph.as_default():
+        tf.import_graph_def(graph_def)
+    return graph
 
 def load_labels(label_file):
     label = []
     with open(label_file, "r", encoding='cp1251') as ins:
         for line in ins:
             label.append(line.rstrip())
-
     return label
 
 class Classifier():
     def __init__(self):
         # uncomment the next 3 lines if you want to use CPU instead of GPU
-        #import os
-        #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        #os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
         self.graph = load_graph(model_file)
         self.labels = load_labels(label_file)
