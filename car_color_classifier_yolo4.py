@@ -4,17 +4,14 @@
 # Usage: $ python car_color_classifier_yolo3.py --image cars.jpg
 
 # import the necessary packages
-import io
 import streamlit as st
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
 import numpy as np
 import argparse
 import time
 import cv2
 import os
 import classifier
-from PIL import Image
+
 
 st.write("""
 # CCD Car Color Detection
@@ -151,5 +148,3 @@ if uf is not None:
 
 	# show the output image
 	st.image(image, caption='Processed Image.', channels='BGR')
-
-
