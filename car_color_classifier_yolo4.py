@@ -20,9 +20,7 @@ def_con = values.index(0.5)
 def_tres = values.index(0.3)
 con = st.sidebar.selectbox('Confidence Value (default 0.5)', values, index=def_con)
 tres = st.sidebar.selectbox('Treshold Value (default 0.3)', values, index=def_tres)
-st.sidebar.write("""
-    [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
-    """)
+
 
 def main():
     # Render the readme as markdown using st.markdown.
@@ -82,6 +80,9 @@ def download_file(file_path):
 
 def run_the_app():
     uf = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png", "webp"])
+    st.sidebar.write("""
+    [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
+    """)
     ap = argparse.ArgumentParser()
     ap.add_argument("-y", "--yolo", default='yolov4', help="base path to YOLO directory")
     args = vars(ap.parse_args())
