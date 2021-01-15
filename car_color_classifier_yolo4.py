@@ -8,7 +8,7 @@ import streamlit as st
 import numpy as np
 import argparse
 import time
-import cv2
+import cv2 as cv
 import os
 import classifier
 
@@ -53,11 +53,11 @@ weightsPath = os.path.sep.join([args["yolo"], "yolov4.weights"])
 configPath = os.path.sep.join([args["yolo"], "yolov4.cfg"])
 
 # load our YOLO object detector trained on COCO dataset (80 classes)
-net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
+net = cv.dnn.readNetFromDarknet(configPath, weightsPath)
 
 # load our input image and grab its spatial dimensions
 if uf is not None:
-	image = cv2.imread(uf.name)
+	image = cv.imread(uf.name)
 	(H, W) = image.shape[:2]
 
 	# determine only the *output* layer names that we need from YOLO
@@ -68,7 +68,7 @@ if uf is not None:
 	# pass of the YOLO object detector, giving us our bounding boxes and
 	# associated probabilities
 
-	blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (608, 608), swapRB=True, crop=False)
+	blob = cv.dnn.blobFromImage(image, 1 / 255.0, (608, 608), swapRB=True, crop=False)
 	net.setInput(blob)
 	start = time.time()
 	outputs = net.forward(output_layers)
@@ -116,7 +116,7 @@ if uf is not None:
 
 	# apply non-maxima suppression to suppress weak, overlapping bounding
 	# boxes
-	idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
+	idxs = cv.dnn.NMSBoxes(boxes, confidences, con, tres)
 
 	# ensure at least one detection exists
 	if len(idxs) > 0:
@@ -135,10 +135,10 @@ if uf is not None:
 				# show timing information on MobileNet classifier
 				print("[INFO] classifier took {:.6f} seconds".format(end - start))
 				text = "{}: {:.4f}".format(result[0]['color'], float(result[0]['prob']))
-				cv2.putText(image, text, (x + 2, y + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-			cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
+				cv.putText(image, text, (x + 2, y + 20), cv.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+			cv.rectangle(image, (x, y), (x + w, y + h), color, 2)
 			text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
-			cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+			cv.putText(image, text, (x, y - 5), cv.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 	# show the output image
 	st.image(image, caption='Processed Image.', channels='BGR')
