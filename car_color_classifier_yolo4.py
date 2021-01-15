@@ -20,14 +20,15 @@ def_con = values.index(0.5)
 def_tres = values.index(0.3)
 con = st.sidebar.selectbox('Confidence Value (default 0.5)', values, index=def_con)
 tres = st.sidebar.selectbox('Treshold Value (default 0.3)', values, index=def_tres)
+st.write("""
+    [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
+    
+    [[Open in Streamlit]](https://share.streamlit.io/anggerwicaksono/car-color-classifier-yolo4-python/car_color_classifier_yolo4.py)
+    """)
 
 def main():
     # Render the readme as markdown using st.markdown.
     st.write("""
-    [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
-    
-    [[Open in Streamlit]](https://share.streamlit.io/anggerwicaksono/car-color-classifier-yolo4-python/car_color_classifier_yolo4.py)
-    
     # CCD Car Color Detection
 
     Implementation of AI Object Detection using YOLOv4 (OpenCV2 DNN backend) on Streamlit
