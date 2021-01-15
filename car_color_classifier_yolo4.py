@@ -24,9 +24,9 @@ tres = st.sidebar.selectbox('Treshold Value (default 0.3)', values, index=def_tr
 def main():
     # Render the readme as markdown using st.markdown.
     st.write("""
-    [![Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
+    [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
     
-    [![Open in Streamlit]](https://share.streamlit.io/anggerwicaksono/car-color-classifier-yolo4-python/car_color_classifier_yolo4.py)
+    [[Open in Streamlit]](https://share.streamlit.io/anggerwicaksono/car-color-classifier-yolo4-python/car_color_classifier_yolo4.py)
     
     # CCD Car Color Detection
 
