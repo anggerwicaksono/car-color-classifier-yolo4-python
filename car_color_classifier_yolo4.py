@@ -20,7 +20,7 @@ def_con = values.index(0.5)
 def_tres = values.index(0.3)
 con = st.sidebar.selectbox('Confidence Value (default 0.5)', values, index=def_con)
 tres = st.sidebar.selectbox('Treshold Value (default 0.3)', values, index=def_tres)
-st.write("""
+st.sidebar.write("""
     [[Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
     """)
 
