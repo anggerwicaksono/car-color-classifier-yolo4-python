@@ -11,134 +11,174 @@ import time
 import cv2
 import os
 import classifier
+import urllib
 
-st.write("""
-# CCD Car Color Detection
 
-Implementation of AI Object Detection using YOLOv4 (OpenCV DNN backend)
-
-(code taken from https://github.com/spectrico/car-color-classifier-yolo4-python)
-
-""")
 st.sidebar.header('Features Setting')
 values = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 def_con = values.index(0.5)
 def_tres = values.index(0.3)
 con = st.sidebar.selectbox('Confidence Value (default 0.5)', values, index=def_con)
 tres = st.sidebar.selectbox('Treshold Value (default 0.3)', values, index=def_tres)
-uf = st.sidebar.file_uploader("Upload an image", type=["jpg"])
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-y", "--yolo", default='yolov4', help="base path to YOLO directory")
-args = vars(ap.parse_args())
 
-if uf is not None:
-	st.image(uf, caption="Uploaded Image", use_column_width=True)
-	with open(uf.name, 'wb') as f:
-		f.write(uf.read())
-		st.write("Processing Image ...")
+def main():
+    # Render the readme as markdown using st.markdown.
+    st.write("""
+    [![Open in Github]](https://github.com/anggerwicaksono/car-color-classifier-yolo4-python.git)
+    
+    [![Open in Streamlit]](https://share.streamlit.io/anggerwicaksono/car-color-classifier-yolo4-python/car_color_classifier_yolo4.py)
+    
+    # CCD Car Color Detection
 
-car_color_classifier = classifier.Classifier()
+    Implementation of AI Object Detection using YOLOv4 (OpenCV2 DNN backend) on Streamlit
 
-# load the COCO class labels our YOLO model was trained on
-labelsPath = os.path.sep.join([args["yolo"], "coco.names"])
-LABELS = open(labelsPath).read().strip().split("\n")
+    (code forked from https://github.com/spectrico/car-color-classifier-yolo4-python)
+    
+    """)
 
-# initialize a list of colors to represent each possible class label
-np.random.seed(42)
-COLORS = np.random.randint(0, 255, size=(len(LABELS), 3), dtype="uint8")
+    # Download external dependencies.
+    for filename in EXTERNAL_DEPENDENCIES.keys():
+        download_file(filename)
 
-# derive the paths to the YOLO weights and model configuration
-weightsPath = os.path.sep.join([args["yolo"], "yolov4.weights"])
-configPath = os.path.sep.join([args["yolo"], "yolov4.cfg"])
+    # Once we have the dependencies, add a selector for the app mode on the sidebar.
 
-# load our YOLO object detector trained on COCO dataset (80 classes)
-net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
+    run_the_app()
+
+def download_file(file_path):
+    # Don't download the file twice. (If possible, verify the download using the file length.)
+    if os.path.exists(file_path):
+        if "size" not in EXTERNAL_DEPENDENCIES[file_path]:
+            return
+        elif os.path.getsize(file_path) == EXTERNAL_DEPENDENCIES[file_path]["size"]:
+            return
+
+    # These are handles to two visual elements to animate.
+    weights_warning, progress_bar = None, None
+    try:
+        weights_warning = st.warning("Downloading %s..." % file_path)
+        progress_bar = st.progress(0)
+        with open(file_path, "wb") as output_file:
+            with urllib.request.urlopen(EXTERNAL_DEPENDENCIES[file_path]["url"]) as response:
+                length = int(response.info()["Content-Length"])
+                counter = 0.0
+                MEGABYTES = 2.0 ** 20.0
+                while True:
+                    data = response.read(8192)
+                    if not data:
+                        break
+                    counter += len(data)
+                    output_file.write(data)
+
+                    # We perform animation by overwriting the elements.
+                    weights_warning.warning("Downloading %s... (%6.2f/%6.2f MB)" %
+                        (file_path, counter / MEGABYTES, length / MEGABYTES))
+                    progress_bar.progress(min(counter / length, 1.0))
+
+    # Finally, we remove these visual elements by calling .empty().
+    finally:
+        if weights_warning is not None:
+            weights_warning.empty()
+        if progress_bar is not None:
+            progress_bar.empty()
+
+def run_the_app():
+    uf = st.sidebar.file_uploader("Upload an image", type=["jpg", "jpeg", "png", "webp"])
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-y", "--yolo", default='yolov4', help="base path to YOLO directory")
+    args = vars(ap.parse_args())
+
+    if uf is not None:
+        st.image(uf, caption="Uploaded Image", use_column_width=True)
+        with open(uf.name, 'wb') as f:
+            f.write(uf.read())
+            st.write("Processing Image ...")
+
+    car_color_classifier = classifier.Classifier()
+
+    labelsPath = os.path.sep.join([args["yolo"], "coco.names"])
+    LABELS = open(labelsPath).read().strip().split("\n")
+
+    np.random.seed(42)
+    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3), dtype="uint8")
+    #configPath = os.path.sep.join([args["yolo"], "yolov4.cfg"])
+    def load_network(configPath, weightsPath):
+        net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
+        output_layer_names = net.getLayerNames()
+        output_layer_names = [output_layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+        return net, output_layer_names
+
+    net, output_layer_names = load_network("yolov4.cfg", "yolov4.weights")
+
 
 # load our input image and grab its spatial dimensions
-if uf is not None:
-	image = cv2.imread(uf.name)
-	(H, W) = image.shape[:2]
+    if uf is not None:
+        image = cv2.imread(uf.name)
+        (H, W) = image.shape[:2]
 
-	# determine only the *output* layer names that we need from YOLO
-	layer_names = net.getLayerNames()
-	output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+        layer_names = net.getLayerNames()
+        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-	# construct a blob from the input image and then perform a forward
-	# pass of the YOLO object detector, giving us our bounding boxes and
-	# associated probabilities
 
-	blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (608, 608), swapRB=True, crop=False)
-	net.setInput(blob)
-	start = time.time()
-	outputs = net.forward(output_layers)
-	end = time.time()
+        blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (608, 608), swapRB=True, crop=False)
+        net.setInput(blob)
+        start = time.time()
+        outputs = net.forward(output_layers)
+        end = time.time()
 
-	# show timing information on YOLO
-	st.write("Time took {:.6f} seconds".format(end - start))
+        st.write("Time took {:.6f} seconds".format(end - start))
 
-	# initialize our lists of detected bounding boxes, confidences, and
-	# class IDs, respectively
-	boxes = []
-	confidences = []
-	classIDs = []
+        boxes = []
+        confidences = []
+        classIDs = []
 
-	# loop over each of the layer outputs
-	for output in outputs:
-		# loop over each of the detections
-		for detection in output:
-			# extract the class ID and confidence (i.e., probability) of
-			# the current object detection
-			scores = detection[5:]
-			classID = np.argmax(scores)
-			confidence = scores[classID]
+        for output in outputs:
+            for detection in output:
+                scores = detection[5:]
+                classID = np.argmax(scores)
+                confidence = scores[classID]
+                if confidence > con:
+                    box = detection[0:4] * np.array([W, H, W, H])
+                    (centerX, centerY, width, height) = box.astype("int")
 
-			# filter out weak predictions by ensuring the detected
-			# probability is greater than the minimum probability
-			if confidence > con:
-				# scale the bounding box coordinates back relative to the
-				# size of the image, keeping in mind that YOLO actually
-				# returns the center (x, y)-coordinates of the bounding
-				# box followed by the boxes' width and height
-				box = detection[0:4] * np.array([W, H, W, H])
-				(centerX, centerY, width, height) = box.astype("int")
+                    x = int(centerX - (width / 2))
+                    y = int(centerY - (height / 2))
 
-				# use the center (x, y)-coordinates to derive the top and
-				# and left corner of the bounding box
-				x = int(centerX - (width / 2))
-				y = int(centerY - (height / 2))
+                    boxes.append([x, y, int(width), int(height)])
+                    confidences.append(float(confidence))
+                    classIDs.append(classID)
 
-				# update our list of bounding box coordinates, confidences,
-				# and class IDs
-				boxes.append([x, y, int(width), int(height)])
-				confidences.append(float(confidence))
-				classIDs.append(classID)
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
 
-	# apply non-maxima suppression to suppress weak, overlapping bounding
-	# boxes
-	idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
+        if len(idxs) > 0:
+            for i in idxs.flatten():
+                (x, y) = (boxes[i][0], boxes[i][1])
+                (w, h) = (boxes[i][2], boxes[i][3])
 
-	# ensure at least one detection exists
-	if len(idxs) > 0:
-		# loop over the indexes we are keeping
-		for i in idxs.flatten():
-			# extract the bounding box coordinates
-			(x, y) = (boxes[i][0], boxes[i][1])
-			(w, h) = (boxes[i][2], boxes[i][3])
+                color = [int(c) for c in COLORS[classIDs[i]]]
+                if classIDs[i] == 2:
+                    start = time.time()
+                    result = car_color_classifier.predict(image[max(y, 0):y + h, max(x, 0):x + w])
+                    end = time.time()
+                    text = "{}: {:.4f}".format(result[0]['color'], float(result[0]['prob']))
+                    cv2.putText(image, text, (x + 2, y + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
+                text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
+                cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-			# draw a bounding box rectangle and label on the image
-			color = [int(c) for c in COLORS[classIDs[i]]]
-			if classIDs[i] == 2:
-				start = time.time()
-				result = car_color_classifier.predict(image[max(y, 0):y + h, max(x, 0):x + w])
-				end = time.time()
-				# show timing information on MobileNet classifier
-				print("[INFO] classifier took {:.6f} seconds".format(end - start))
-				text = "{}: {:.4f}".format(result[0]['color'], float(result[0]['prob']))
-				cv2.putText(image, text, (x + 2, y + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-			cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
-			text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
-			cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        st.image(image, caption='Processed Image.', channels='BGR')
 
-	# show the output image
-	st.image(image, caption='Processed Image.', channels='BGR')
+# External files to download.
+EXTERNAL_DEPENDENCIES = {
+    "yolov4.weights": {
+        "url": "https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights",
+        "size": 257717640
+    },
+    "yolov4.cfg": {
+        "url": "https://raw.githubusercontent.com/anggerwicaksono/car-color-classifier-yolo4-python/master/yolov4/yolov4.cfg",
+        "size": 13351
+    }
+
+}
+
+if __name__ == "__main__":
+    main()
