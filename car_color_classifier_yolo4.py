@@ -146,7 +146,7 @@ def run_the_app():
                     classIDs.append(classID)
 
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
-
+        start = time.time()
         if len(idxs) > 0:
             for i in idxs.flatten():
                 (x, y) = (boxes[i][0], boxes[i][1])
@@ -154,10 +154,7 @@ def run_the_app():
 
                 color = [int(c) for c in COLORS[classIDs[i]]]
                 if classIDs[i] == 2 or classIDs[i] == 7:
-                    start = time.time()
                     result = car_color_classifier.predict(image[max(y, 0):y + h, max(x, 0):x + w])
-                    end = time.time()
-                    st.write("Time took {:.6f} seconds".format(end - start))
                     text = "{}: {:.4f}".format(result[0]['color'], float(result[0]['prob']))
                     cv2.putText(image, text, (x + 2, y + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                 cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
@@ -165,7 +162,8 @@ def run_the_app():
                 cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         st.image(image, caption='Processed Image.', channels='BGR')
-
+        end = time.time()
+        st.write("Time took {:.6f} seconds".format(end - start))
 # External files to download.
 EXTERNAL_DEPENDENCIES = {
     "yolov4.weights": {
