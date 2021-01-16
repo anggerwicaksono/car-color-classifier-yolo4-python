@@ -144,7 +144,7 @@ def run_the_app():
 
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
         start = time.time()
-        if len(idxs) > 1:
+        if len(idxs) > 0:
             for i in idxs.flatten():
                 (x, y) = (boxes[i][0], boxes[i][1])
                 (w, h) = (boxes[i][2], boxes[i][3])
