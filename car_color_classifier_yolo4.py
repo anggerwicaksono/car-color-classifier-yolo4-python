@@ -118,13 +118,10 @@ def run_the_app():
         layer_names = net.getLayerNames()
         output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-
         blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (608, 608), swapRB=True, crop=False)
         net.setInput(blob)
-        #start = time.time()
         outputs = net.forward(output_layers)
-        #end = time.time()
-
+    
         boxes = []
         confidences = []
         classIDs = []
@@ -147,7 +144,7 @@ def run_the_app():
 
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, con, tres)
         start = time.time()
-        if len(idxs) > 0:
+        if len(idxs) > 1:
             for i in idxs.flatten():
                 (x, y) = (boxes[i][0], boxes[i][1])
                 (w, h) = (boxes[i][2], boxes[i][3])
@@ -174,7 +171,6 @@ EXTERNAL_DEPENDENCIES = {
         "url": "https://raw.githubusercontent.com/anggerwicaksono/car-color-classifier-yolo4-python/master/yolov4/yolov4.cfg",
         "size": 13351
     }
-
 }
 
 if __name__ == "__main__":
